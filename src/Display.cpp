@@ -2,6 +2,7 @@
 #include <Display.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_SH110X.h>
 
 static const unsigned char PROGMEM cup[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC1, 0xC1, 0x80, 0x00, 0x01, 0x83, 0x83, 0x00, 0x00, 0x01,
@@ -20,9 +21,9 @@ static const unsigned char PROGMEM cup[] = {
 };
 
 Display::Display() {
-    display = new Adafruit_SSD1306(128, 64, &Wire, 4);
+    display = new DISPLAYDRIVER(DISPLAYWIDTH, DISPLAYHEIGHT, &Wire, -1);
 
-    if(!display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDR)) {
+    if(!display->begin(DISPLAY_ADDR)) {
         for(;;);
     }
 

@@ -9,3 +9,6 @@
 #define SSR 6 // Start Button Input Pins
 #define SINGLEDOSE_DEFAULT_TIME 2.00 // Default Single Dose Time in S
 #define DOUBLEDOSE_DEFAULT_TIME 4.00 // Default Double Dose Time in S
+#define DISPLAYDRIVER Adafruit_SH1106G // Probably Adafruit_SH1106G or Adafruit_SSD1306
+#define DISPLAYWIDTH 128 // Currently cannot handle a value other than 128
+#define DISPLAYHEIGHT 64 // Currently cannot handle a value other than 64

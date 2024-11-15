@@ -1,11 +1,11 @@
 #pragma once
 
-class Adafruit_SSD1306;
+class DISPLAYDRIVER;
 
 class Display
 {
   private:
-    Adafruit_SSD1306* display;
+    DISPLAYDRIVER* display;
 
   public:
     Display();

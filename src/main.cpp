@@ -66,11 +66,11 @@ void loop() {
 
     case SET_DOSE:
       if (encoder->wasTurnedLeft()) {
-        dosage->singleDoseTime -= dosage->singleDoseSelected ? 0.1 : 0.0;
-        dosage->doubleDoseTime -= dosage->singleDoseSelected == false ? 0.1 : 0.0;
+        dosage->singleDoseTime -= dosage->singleDoseSelected ? 0.01 : 0.0;
+        dosage->doubleDoseTime -= dosage->singleDoseSelected == false ? 0.01 : 0.0;
       } else if (encoder->wasTurnedRight()) {
-        dosage->singleDoseTime += dosage->singleDoseSelected ? 0.1 : 0.0;
-        dosage->doubleDoseTime += dosage->singleDoseSelected == false ? 0.1 : 0.0;
+        dosage->singleDoseTime += dosage->singleDoseSelected ? 0.01 : 0.0;
+        dosage->doubleDoseTime += dosage->singleDoseSelected == false ? 0.01 : 0.0;
       }
 
       dosage->writeToEEPROM();
@@ -89,8 +89,7 @@ void loop() {
       grinder->off();
 
       display->printTime(0.0);
-      delay(500); // show 0.0 on display for a longer time
-
+      delay(1000); // show 0.0 on display for a longer time
       state = NORMAL;
       break;
  
