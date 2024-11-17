@@ -1,20 +1,21 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
-#include "RotaryEncoder.h"
+
 #include "Definitions.h"
+#include "RotaryEncoder.h"
 #include "Display.h"
 #include "Dosage.h"
 #include "Grinder.h"
 
 RotaryEncoder *encoder;
-Display * display;
+Display *display;
 Dosage *dosage;
 Grinder *grinder;
 
 // State Machine
-enum States {NORMAL, SET_DOSE, GRINDING, STATS};
-uint8_t state = NORMAL;
+enum States {CHANGE_DOSE, SET_DOSE, GRINDING, STATS};
+uint8_t state = SET_DOSE;
 
 void setup() {
   Serial.begin(9600);
@@ -29,10 +30,10 @@ void(* resetFunc) (void) = 0;
 void loop() {
   switch(state)
   {
-    case NORMAL:
-      // set new dose
+    case SET_DOSE:
+      // change dose
       if (encoder->wasPressed()) {
-        state = SET_DOSE;
+        state = CHANGE_DOSE;
         break;
       }
 
@@ -48,62 +49,76 @@ void loop() {
         break;
       }
 
-      // select dosage
       if (encoder->wasTurnedLeft()) {
-        dosage->singleDoseSelected = true;
+        dosage->dose1Time -= dosage->dose1Selected ? DOSE_PRECISION : 0.0;
+        dosage->dose2Time -= dosage->dose1Selected == false ? DOSE_PRECISION : 0.0;
+        dosage->dose1Time = dosage->dose1Time < 0 ? 0.00 : dosage->dose1Time;
+        dosage->dose2Time = dosage->dose2Time < 0 ? 0.00 : dosage->dose2Time;
+
       } else if (encoder->wasTurnedRight()) {
-        dosage->singleDoseSelected = false;
+        dosage->dose1Time += dosage->dose1Selected ? DOSE_PRECISION : 0.0;
+        dosage->dose2Time += dosage->dose1Selected == false ? DOSE_PRECISION : 0.0;
+        dosage->dose1Time = dosage->dose1Time < MAX_DOSE_TIME ? dosage->dose1Time : MAX_DOSE_TIME;
+        dosage->dose2Time = dosage->dose2Time < MAX_DOSE_TIME ? dosage->dose2Time : MAX_DOSE_TIME;
       }
 
-      // display dosage
-      if (dosage->singleDoseSelected) {
-        display->printSingleDose();
-      } else {
-        display->printDoubleDose();
-      }
+      
+      display->printTime(dosage->dose1Selected ? dosage->dose1Time : dosage->dose2Time);
 
       break;
 
-    case SET_DOSE:
+    case CHANGE_DOSE:
+      // select dose
       if (encoder->wasTurnedLeft()) {
-        dosage->singleDoseTime -= dosage->singleDoseSelected ? 0.01 : 0.0;
-        dosage->doubleDoseTime -= dosage->singleDoseSelected == false ? 0.01 : 0.0;
+        dosage->dose1Selected = true;
       } else if (encoder->wasTurnedRight()) {
-        dosage->singleDoseTime += dosage->singleDoseSelected ? 0.01 : 0.0;
-        dosage->doubleDoseTime += dosage->singleDoseSelected == false ? 0.01 : 0.0;
+        dosage->dose1Selected = false;
       }
 
-      dosage->writeToEEPROM();
-      display->printTime(dosage->singleDoseSelected ? dosage->singleDoseTime : dosage->doubleDoseTime);
-      
-      state = NORMAL;
+      // display dose icons
+      if (dosage->dose1Selected) {
+        display->printDose1();
+      } else {
+        display->printDose2();
+      }
+      state = SET_DOSE;
       break;
 
     case GRINDING:
-      grinder->increaseShotCounter(dosage->singleDoseSelected);
-
-      grinder->on(dosage->singleDoseSelected ? dosage->singleDoseTime : dosage->doubleDoseTime);
+      
+      dosage->writeToEEPROM(); //Write dose time to EEPROM, will only write if value has changed.
+      #ifdef SHOTSTATS
+      grinder->increaseShotCounter(dosage->dose1Selected);
+      #endif
+      grinder->on(dosage->dose1Selected ? dosage->dose1Time : dosage->dose2Time);
       while (millis() < grinder->getTargetTime()) {
         display->printTime((grinder->getTargetTime() - millis()) / 1000.0);
+        
       }
       grinder->off();
 
       display->printTime(0.0);
-      delay(1000); // show 0.0 on display for a longer time
-      state = NORMAL;
+      delay(250); // show 0.0 on display for a longer time
+      state = SET_DOSE;
       break;
  
     case STATS:
-      display->printStatistics(grinder->getSingleDoseStats(), grinder->getDoubleDoseStats());
+      display->printStatistics(grinder->getDose1Stats(), grinder->getDose2Stats());
+      if (encoder->wasPressed()) {
+        state = SET_DOSE;
+      }
 
       unsigned long target = millis() + ENC_SW_LONG_PRESS_DUR;
       while (encoder->isPressed())
       {
         if (millis() > target) {
+          display->simpleText("Factory Reset...");
+          delay(2500);
           grinder->resetStats();
           resetFunc();
         }
       }
+      
 
       break;
   }

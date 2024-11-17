@@ -1,14 +1,15 @@
-#include <Dosage.h>
 #include <EEPROM.h>
 
+#include "Dosage.h"
+
 Dosage::Dosage() {
-    EEPROM.get(eeAddress, singleDoseTime);
-    EEPROM.get(eeAddress + sizeof(double), doubleDoseTime);
-    singleDoseTime = singleDoseTime == 0.0 ? SINGLEDOSE_DEFAULT_TIME : singleDoseTime;
-    doubleDoseTime = doubleDoseTime == 0.0 ? DOUBLEDOSE_DEFAULT_TIME : doubleDoseTime;
+    EEPROM.get(eeAddress, dose1Time);
+    EEPROM.get(eeAddress + sizeof(double), dose2Time);
+    dose1Time = dose1Time == 0.0 ? DOSE1_DEFAULT_TIME : dose1Time;
+    dose2Time = dose2Time == 0.0 ? DOSE2_DEFAULT_TIME : dose2Time;
 }
 
 void Dosage::writeToEEPROM() {
-    EEPROM.put(eeAddress, singleDoseTime);
-    EEPROM.put(eeAddress + sizeof(double), doubleDoseTime);
+        EEPROM.put(eeAddress, dose1Time);
+        EEPROM.put(eeAddress + sizeof(double), dose2Time);
 }

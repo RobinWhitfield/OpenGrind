@@ -8,8 +8,8 @@ class Dosage
 
   public:
     Dosage();
-    bool singleDoseSelected = false;
-    double singleDoseTime = SINGLEDOSE_DEFAULT_TIME;
-    double doubleDoseTime = DOUBLEDOSE_DEFAULT_TIME;
+    bool dose1Selected = false;
+    double dose1Time = DOSE1_DEFAULT_TIME;
+    double dose2Time = DOSE2_DEFAULT_TIME;
     void writeToEEPROM();
 };

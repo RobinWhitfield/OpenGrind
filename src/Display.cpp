@@ -1,8 +1,9 @@
-#include <Definitions.h>
-#include <Display.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_SH110X.h>
+
+#include "Definitions.h"
+#include "Display.h"
 
 static const unsigned char PROGMEM cup[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC1, 0xC1, 0x80, 0x00, 0x01, 0x83, 0x83, 0x00, 0x00, 0x01,
@@ -30,21 +31,32 @@ Display::Display() {
     display->cp437(true);
     display->clearDisplay();
     display->display();
+    display->invertDisplay(INVERTDISPLAY);
+    display->setRotation(DISPLAYROTATION);
 }
 
-void Display::printSingleDose() {
+void Display::simpleText(char text[]) {
+    display->clearDisplay();
+    display->setTextColor(WHITE);
+    display->setCursor(0,0);
+    display->setTextSize(1);
+    display->print(text);
+    display->display();
+}
+
+void Display::printDose1() {
     display->clearDisplay();
     display->drawBitmap(
-        (display->width()  - 40 ) / 2,
+        (display->width()  - 40) / 2,
         (display->height() - 40) / 2,
         cup, 40, 40, 1);
     display->display();
 }
 
-void Display::printDoubleDose() {
+void Display::printDose2() {
     display->clearDisplay();
     display->drawBitmap(
-        (display->width()  - 94 ) / 2,
+        (display->width()  - 94) / 2,
         (display->height() - 40) / 2,
         cup, 40, 40, 1);
     display->drawBitmap(
@@ -58,35 +70,51 @@ void Display::printTime(double time) {
     display->clearDisplay();
 
     display->setTextColor(WHITE);
-    display->setTextSize(4);
-    display->setCursor(10, 20);
-    time = time < 0 ? 0.0 : time;
-    time = time < 100 ? time : 99.9;
-    display->print(time, time < 10 ? 2 : 1);
-
-    display->setTextSize(2);
-    display->setCursor(110, 34);
+    if(DISPLAYHEIGHT == 32) {
+        display->setTextSize(3);
+        display->setCursor(26, 4);
+    }
+    else {
+        display->setTextSize(4);
+        display->setCursor(12, 20);
+    }
+    display->print(time, time < MAX_DOSE_TIME + DOSE_PRECISION ? 2 : 1);
+    if(DISPLAYHEIGHT == 32) {
+        display->setTextSize(1);
+        //display->setCursor(87, 17);
+    }
+    else {
+        display->setTextSize(2);
+        display->setCursor(110, 34);
+    }
     display->print("S");
 
-    display->println();
+    //display->println();
     display->display();
 }
 
-void Display::printStatistics(int numberSingles, int numberDoubles) {
+//#ifdef SHOTSTATS
+void Display::printStatistics(int numberDose1, int numberDose2) {
     display->clearDisplay();
-
     display->setTextColor(WHITE);
+
+    #ifdef SHOTSTATS
     display->setTextSize(2);
-    display->setCursor(10, 16);
-    display->print("#S:");
-    display->setCursor(50, 16);
-    display->print(numberSingles);
-
-    display->setCursor(10, 36);
-    display->print("#D:");
-    display->setCursor(50, 36);
-    display->print(numberDoubles);
-
+    display->setCursor(10, 4);
+    display->print("D1: ");
+    display->println(numberDose1);
+    display->setCursor(10, 24);
+    display->print("D2: ");
+    display->println(numberDose2);
+    #else
+    display->setTextSize(1);
+    display->setCursor(0, 12);
+    display->println("Commercial mode");
+    display->println("Stats disabled");
+    #endif
+    display->setTextSize(1);
     display->println();
+    display->print("Hold to factory reset");
     display->display();
 }
+//#endif

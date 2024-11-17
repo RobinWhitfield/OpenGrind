@@ -1,7 +1,8 @@
-#include <RotaryEncoder.h>
-#include <Definitions.h>
 #include <Encoder.h>
 #include <JC_Button.h>
+
+#include "Definitions.h"
+#include "RotaryEncoder.h"
 
 RotaryEncoder::RotaryEncoder() {
     button = new Button(ENC_SW, 100, true, true);
@@ -10,7 +11,7 @@ RotaryEncoder::RotaryEncoder() {
 }
 
 bool RotaryEncoder::wasTurnedLeft() {
-    if (encoder->read() < 0 - ENC_TOL) {
+    if (encoder->read() > 0 + ENC_TOL) {
         encoder->write(0);
         return true;
     }
@@ -18,7 +19,7 @@ bool RotaryEncoder::wasTurnedLeft() {
 }
 
 bool RotaryEncoder::wasTurnedRight() {
-    if (encoder->read() > 0 + ENC_TOL) {
+    if (encoder->read() < 0 - ENC_TOL) {
         encoder->write(0);
         return true;
     }

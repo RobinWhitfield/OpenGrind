@@ -9,8 +9,9 @@ class Display
 
   public:
     Display();
-    void printSingleDose();
-    void printDoubleDose();
+    void printDose1();
+    void printDose2();
     void printTime(double time);
-    void printStatistics(int numberSingles, int numberDoubles);
+    void printStatistics(int numberDose1, int numberDose2);
+    void simpleText(char text[]);
 };
