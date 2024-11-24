@@ -5,6 +5,8 @@
 #include "Definitions.h"
 #include "Display.h"
 
+//#include <Fonts/FreeMonoBold24pt7b.h>
+
 static const unsigned char PROGMEM cup[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC1, 0xC1, 0x80, 0x00, 0x01, 0x83, 0x83, 0x00, 0x00, 0x01,
     0x03, 0x03, 0x00, 0x00, 0x01, 0x03, 0x03, 0x00, 0x00, 0x01, 0x81, 0x83, 0x80, 0x00, 0x00, 0xC1,
@@ -24,9 +26,10 @@ static const unsigned char PROGMEM cup[] = {
 Display::Display() {
     display = new DISPLAYDRIVER(DISPLAYWIDTH, DISPLAYHEIGHT, &Wire, -1);
 
-    if(!display->begin(DISPLAY_ADDR)) {
-        for(;;);
-    }
+    //    if (!display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDR)) {
+        if (!display->begin(DISPLAY_ADDR)) {
+            for(;;);
+        }
 
     display->cp437(true);
     display->clearDisplay();
@@ -66,35 +69,41 @@ void Display::printDose2() {
     display->display();
 }
 
-void Display::printTime(double time) {
+void Display::printTime(uint16_t time) {
+    time /= 10;
     display->clearDisplay();
 
     display->setTextColor(WHITE);
+
     if(DISPLAYHEIGHT == 32) {
-        display->setTextSize(3);
+        display->setTextSize(2);
         display->setCursor(26, 4);
     }
     else {
         display->setTextSize(4);
-        display->setCursor(12, 20);
+        display->setCursor(14, 18);
     }
-    display->print(time, time < MAX_DOSE_TIME + DOSE_PRECISION ? 2 : 1);
+    //display->print(time, time < MAX_DOSE_TIME + DOSE_PRECISION ? 2 : 1);
+    int val = time / 100;
+    int dec = time % 100;
+    display->print(val);
+    display->print(".");
+    if(dec<10) { display->print("0"); }
+    display->print(dec);
     if(DISPLAYHEIGHT == 32) {
         display->setTextSize(1);
-        //display->setCursor(87, 17);
+        display->setCursor(100, 18);
     }
     else {
-        display->setTextSize(2);
-        display->setCursor(110, 34);
+        display->setTextSize(1);
+        display->setCursor(112, 39);
     }
-    display->print("S");
+    display->print("s");
 
-    //display->println();
     display->display();
 }
 
-//#ifdef SHOTSTATS
-void Display::printStatistics(int numberDose1, int numberDose2) {
+void Display::printStatistics(uint16_t numberDose1, uint16_t numberDose2) {
     display->clearDisplay();
     display->setTextColor(WHITE);
 

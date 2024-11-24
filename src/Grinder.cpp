@@ -1,16 +1,19 @@
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <JC_Button.h>
 
 #include "Definitions.h"
 #include "Grinder.h"
 
 Grinder::Grinder() {
     pinMode(SSR, OUTPUT);
-    pinMode(START_BTN, INPUT_PULLUP);
+    pinMode(GRIND_BTN, INPUT_PULLUP);
+    //button = new Button(GRIND_BTN, 100, true, true);
+    //button->begin();
 }
 
 bool Grinder::startBtnPressed() {
-    return !digitalRead(START_BTN); // Negated because PULLUP
+    return !digitalRead(GRIND_BTN); // Negated because PULLUP
 }
 
 int Grinder::getDose1Stats() {
@@ -21,7 +24,7 @@ int Grinder::getDose1Stats() {
 
 int Grinder::getDose2Stats() {
     static int res = 0;
-    EEPROM.get(eeAddress + sizeof(int), res);
+    EEPROM.get(eeAddress + sizeof(uint16_t), res);
     return res;
 }
 
@@ -30,7 +33,7 @@ void Grinder::increaseShotCounter(bool isDose1) {
     if (isDose1) {
         EEPROM.put(eeAddress, getDose1Stats() + 1);
     } else {
-        EEPROM.put(eeAddress + sizeof(int), getDose2Stats() + 1);
+        EEPROM.put(eeAddress + sizeof(uint16_t), getDose2Stats() + 1);
     }
 }
 #endif
@@ -41,14 +44,8 @@ void Grinder::resetStats() {
     }
 }
 
-unsigned long Grinder::getTargetTime() {
-    return targetTime;
-}
-
-void Grinder::on(double targetTime) {
-    this->targetTime = millis() + targetTime * 1000;
+void Grinder::on() {
     digitalWrite(SSR, HIGH);
-
 }
 
 void Grinder::off() {

@@ -9,7 +9,7 @@ class Dosage
   public:
     Dosage();
     bool dose1Selected = false;
-    double dose1Time = DOSE1_DEFAULT_TIME;
-    double dose2Time = DOSE2_DEFAULT_TIME;
+    uint16_t dose1Time = DOSE1_DEFAULT_TIME;
+    uint16_t dose2Time = DOSE2_DEFAULT_TIME;
     void writeToEEPROM();
 };

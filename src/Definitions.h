@@ -11,13 +11,13 @@
 #define ENC_SW 4 // Encoder Switch Input Pin
 #define ENC_TOL 2 // Clicks of encoder tolerance. Typically should be 2
 #define ENC_SW_LONG_PRESS_DUR 5000 // Encoder Switch Long Press Activation Time in ms
-#define START_BTN 5 // Start Button Input Pin
+#define GRIND_BTN 5 // Start Button Input Pin
 #define SSR 6 // SSR Output Pin
 
-#define MAX_DOSE_TIME 9.90 // The maximum grind time, in seconds. Some displays will have issues over 9.99
-#define DOSE_PRECISION 00.05 // The precision of dose time you wish to set. 0.01/0.05 is typically fine. If your max dose time is not divisible by this, you might end up with funny numbers.
+#define MAX_DOSE_TIME 9900 // The maximum grind time, in milliseconds. Some displays will have issues over 9990
+#define DOSE_PRECISION 10 // The precision of dose time you wish to set (in ms). 10/50 is typically fine. If your max dose time is not divisible by this, you might end up with funny numbers.
 
 //#define SHOTSTATS // Shot counter. Comment this out in a commercial setting or you'll probably wear out the MCU EEPROM
 
-#define DOSE1_DEFAULT_TIME 3.00 // Default Dose 1 Time in seconds
-#define DOSE2_DEFAULT_TIME 6.00 // Default Dose 2 Time in seconds
+#define DOSE1_DEFAULT_TIME 3000 // Default Dose 1 Time in ms
+#define DOSE2_DEFAULT_TIME 6000 // Default Dose 2 Time in ms

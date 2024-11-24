@@ -1,10 +1,12 @@
 #pragma once
 
+class Button;
 class Grinder
 {  
     private:
+        Button *button;
         int eeAddress = 100;
-        unsigned long targetTime = 0;
+        //unsigned long targetTime = 0;
 
     public:
         Grinder();
@@ -13,7 +15,8 @@ class Grinder
         int getDose2Stats();
         void increaseShotCounter(bool isDose1);
         void resetStats();
-        unsigned long getTargetTime();
-        void on(double targetTime);
+        unsigned long grindingStart;
+        unsigned long grindingTime;
+        void on();
         void off();
 };
