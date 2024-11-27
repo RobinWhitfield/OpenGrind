@@ -38,7 +38,12 @@ Make sure you have installed [PlatformIO](https://platformio.org/platformio-ide)
 
 ## Usage
 
-The first screen you see after booting is the default screen which contains the selection for the grinding dosage (one or two cup icons).
+The first screen you see after booting is the second dose grind screen. You can turn the encoder left/right to adjust the dose time.
+At the top you will see the temperature sensor value (will display -127 if not detected/connected).
+
+Pressing and rotating the encoder will allow you to change between doses.
+
+Holding the encoder will take you into the stats screen.
 
 
 
