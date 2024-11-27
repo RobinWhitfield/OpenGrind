@@ -1,13 +1,17 @@
 #include <Encoder.h>
-#include <JC_Button.h>
+#include <Bounce2.h>
 
 #include "Definitions.h"
 #include "RotaryEncoder.h"
 
+Bounce2::Button encoderPin = Bounce2::Button();
+
 RotaryEncoder::RotaryEncoder() {
-    button = new Button(ENC_SW, 100, true, true);
     encoder = new Encoder(ENC_CLK, ENC_DT);
-    button->begin();
+
+    encoderPin.attach(ENC_SW, INPUT_PULLUP);
+    encoderPin.interval(5);
+    encoderPin.setPressedState(LOW);
 }
 
 bool RotaryEncoder::wasTurnedLeft() {
@@ -26,32 +30,28 @@ bool RotaryEncoder::wasTurnedRight() {
     return false;
 }
 
-bool RotaryEncoder::isPressed() {
-    button->read();
-    if (button->isPressed()) {
-        return true;
-    }
-    return false;
+void RotaryEncoder::btnUpdate() {
+    encoderPin.update();
 }
 
-bool RotaryEncoder::isReleased() {
-    button->read();
-    if (button->isReleased()) {
-        return true;
-    }
-    return false;
+bool RotaryEncoder::isPressed() {
+    return encoderPin.isPressed();
 }
 
 bool RotaryEncoder::wasPressed() {
-    if (!wasLongPressed() && button->isPressed()) {
-        return true;
-    }
-    return false;
+    return encoderPin.pressed();
+}
+
+bool RotaryEncoder::wasReleased() {
+    return encoderPin.released();
+}
+
+bool RotaryEncoder::btnChanged() {
+    return encoderPin.changed();
 }
 
 bool RotaryEncoder::wasLongPressed() {
-    button->read();
-    if (button->pressedFor(ENC_SW_LONG_PRESS_DUR)) {
+    if (encoderPin.isPressed() && encoderPin.currentDuration() > ENC_SW_LONG_PRESS_DUR) {
         return true;
     }
     return false;

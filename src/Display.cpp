@@ -1,11 +1,10 @@
-#include <Adafruit_GFX.h>
+//#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_SH110X.h>
 
 #include "Definitions.h"
 #include "Display.h"
-
-//#include <Fonts/FreeMonoBold24pt7b.h>
+#include "Temperature.h"
 
 static const unsigned char PROGMEM cup[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC1, 0xC1, 0x80, 0x00, 0x01, 0x83, 0x83, 0x00, 0x00, 0x01,
@@ -38,12 +37,12 @@ Display::Display() {
     display->setRotation(DISPLAYROTATION);
 }
 
-void Display::simpleText(char text[]) {
+void Display::resetText() {
     display->clearDisplay();
     display->setTextColor(WHITE);
     display->setCursor(0,0);
     display->setTextSize(1);
-    display->print(text);
+    display->print(F("Factory reset..."));
     display->display();
 }
 
@@ -69,11 +68,22 @@ void Display::printDose2() {
     display->display();
 }
 
-void Display::printTime(uint16_t time) {
+void Display::printTime(uint16_t time, int16_t temp) {
     time /= 10;
     display->clearDisplay();
 
     display->setTextColor(WHITE);
+
+    display->setTextSize(1);
+    display->setCursor(0, 0);
+    int val = temp / 100;
+    int dec = temp % 100;
+    if(dec<0) { dec -= (2*dec); }
+    display->print(val);
+    display->print(".");
+    if(dec<10) { display->print(F("0")); }
+    display->print(dec);
+    display->print(F(" C"));
 
     if(DISPLAYHEIGHT == 32) {
         display->setTextSize(2);
@@ -83,12 +93,12 @@ void Display::printTime(uint16_t time) {
         display->setTextSize(4);
         display->setCursor(14, 18);
     }
-    //display->print(time, time < MAX_DOSE_TIME + DOSE_PRECISION ? 2 : 1);
-    int val = time / 100;
-    int dec = time % 100;
+
+    val = time / 100;
+    dec = time % 100;
     display->print(val);
     display->print(".");
-    if(dec<10) { display->print("0"); }
+    if(dec<10) { display->print(F("0")); }
     display->print(dec);
     if(DISPLAYHEIGHT == 32) {
         display->setTextSize(1);
@@ -107,23 +117,23 @@ void Display::printStatistics(uint16_t numberDose1, uint16_t numberDose2) {
     display->clearDisplay();
     display->setTextColor(WHITE);
 
-    #ifdef SHOTSTATS
+    #ifdef DOSESTATS
     display->setTextSize(2);
     display->setCursor(10, 4);
-    display->print("D1: ");
+    display->print(F("D1: "));
     display->println(numberDose1);
     display->setCursor(10, 24);
-    display->print("D2: ");
+    display->print(F("D2: "));
     display->println(numberDose2);
     #else
     display->setTextSize(1);
     display->setCursor(0, 12);
-    display->println("Commercial mode");
-    display->println("Stats disabled");
+    display->println(F("Commercial mode"));
+    display->println(F("Stats disabled"));
     #endif
     display->setTextSize(1);
     display->println();
-    display->print("Hold to factory reset");
+    display->print(F("Hold to factory reset"));
     display->display();
 }
 //#endif

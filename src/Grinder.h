@@ -1,22 +1,29 @@
 #pragma once
 
-class Button;
+//class Button;
 class Grinder
 {  
     private:
-        Button *button;
+        //Button *button;
         int eeAddress = 100;
-        //unsigned long targetTime = 0;
 
     public:
         Grinder();
-        bool startBtnPressed();
+        //bool startBtnPressed();
+
+        void btnUpdate();
+        bool isPressed();
+        bool wasPressed();
+        bool wasReleased();
+        bool wasLongPressed();
+        bool btnChanged();
+
         int getDose1Stats();
         int getDose2Stats();
-        void increaseShotCounter(bool isDose1);
+        void increaseStatsCounter(bool isDose1);
         void resetStats();
-        unsigned long grindingStart;
-        unsigned long grindingTime;
+        unsigned long grindingStart = 0;
+        unsigned long grindingTime = 0;
         void on();
         void off();
 };
