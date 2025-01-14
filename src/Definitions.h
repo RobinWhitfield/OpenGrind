@@ -13,16 +13,22 @@
 #define ENC_SW_LONG_PRESS_DUR 5000 // Encoder switch long press activation time in ms
 
 #define GRIND_BTN 5 // Start/grind button Input pin
-#define GRIND_BTN_LONG_PRESS_DUR 500 // Grind button long press activation time in ms
+#define GRIND_BTN_LONG_PRESS_DUR 500 // Grind button long press activation time in ms (TODO)
 
 #define SSR 6 // SSR Output pin
+
+#define SCALE_DAT 8 // Scale Data Pin
+#define SCALE_CLK 9 // Scale Clock Pin
 
 #define ONE_WIRE_BUS 7 // One wire bus pin for DS18B20 sensor
 
 #define MAX_DOSE_TIME 9900 // The maximum grind time, in milliseconds. Some displays will have issues over 9990
+#define MAX_GBW_DOSE 500 // The maximum GBW dose in decigrams
 #define DOSE_PRECISION 50 // The precision of dose time you wish to set (in ms). Min 10, 50 is usually fine. If your max dose time is not divisible by this, you might end up with funny numbers.
+#define GBW_DOSE_PRECISION 50 // GBW dose precision (in decigrams, 1 = 0.1g)
 
 #define DOSESTATS // Dose counter enabled. Comment this out in a commercial setting or you might wear out the MCU EEPROM
 
 #define DOSE1_DEFAULT_TIME 3000 // Default Dose 1 Time in ms
 #define DOSE2_DEFAULT_TIME 6000 // Default Dose 2 Time in ms
+#define GBW_DEFAULT_DOSE 180 // default GBW dose in decigrams (/10 to get grams, yes it's weird, just live with it)

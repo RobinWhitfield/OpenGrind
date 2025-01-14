@@ -26,9 +26,9 @@ Display::Display() {
     display = new DISPLAYDRIVER(DISPLAYWIDTH, DISPLAYHEIGHT, &Wire, -1);
 
     //    if (!display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDR)) {
-        if (!display->begin(DISPLAY_ADDR)) {
-            for(;;);
-        }
+    if (!display->begin(DISPLAY_ADDR)) {
+        for(;;);
+    }
 
     display->cp437(true);
     display->clearDisplay();
@@ -68,7 +68,16 @@ void Display::printDose2() {
     display->display();
 }
 
-void Display::printTime(uint16_t time, int16_t temp) {
+void Display::printGBWDose() {
+    display->clearDisplay();
+    display->drawBitmap(
+        (display->width()  - 40) / 2,
+        (display->height() - 40) / 2,
+        cup, 40, 40, 1);
+    display->display();
+}
+
+void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
     time /= 10;
     display->clearDisplay();
 
@@ -76,23 +85,30 @@ void Display::printTime(uint16_t time, int16_t temp) {
 
     display->setTextSize(1);
     display->setCursor(0, 0);
-    int val = temp / 100;
-    int dec = temp % 100;
+    uint16_t val = temp / 100;
+    uint16_t dec = temp % 100;
     if(dec<0) { dec -= (2*dec); }
     display->print(val);
     display->print(".");
     if(dec<10) { display->print(F("0")); }
     display->print(dec);
-    display->print(F(" C"));
+    display->print(F("c     "));
+    val = mass / 10;
+    dec = mass % 10;
+    if(dec<0) { dec -= (2*dec); }
+    display->print(val);
+    display->print(".");
+    display->print(dec);
+    display->print(F("g"));
 
+    /*
     if(DISPLAYHEIGHT == 32) {
         display->setTextSize(2);
         display->setCursor(26, 4);
     }
-    else {
+    else { */
         display->setTextSize(4);
         display->setCursor(14, 18);
-    }
 
     val = time / 100;
     dec = time % 100;
@@ -100,14 +116,15 @@ void Display::printTime(uint16_t time, int16_t temp) {
     display->print(".");
     if(dec<10) { display->print(F("0")); }
     display->print(dec);
+    /*
     if(DISPLAYHEIGHT == 32) {
         display->setTextSize(1);
         display->setCursor(100, 18);
     }
-    else {
+    else { */
         display->setTextSize(1);
         display->setCursor(112, 39);
-    }
+        
     display->print("s");
 
     display->display();

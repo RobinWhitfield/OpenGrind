@@ -44,43 +44,24 @@ bool Grinder::wasLongPressed() {
     return false;
 }
 
-/*
-int Grinder::getDoseStats(int i) {
+uint16_t Grinder::getStats(uint_least8_t i) {
     static int res = 0;
     EEPROM.get(eeAddress + (i * sizeof(uint16_t)), res);
     return res;
 }
-*/
-
-int Grinder::getDose1Stats() {
-    static int res = 0;
-    EEPROM.get(eeAddress, res);
-    return res;
-}
-
-int Grinder::getDose2Stats() {
-    static int res = 0;
-    EEPROM.get(eeAddress + sizeof(uint16_t), res);
-    return res;
-}
 
 #ifdef DOSESTATS
-void Grinder::increaseStatsCounter(bool isDose1) {
-    if (isDose1) {
-        EEPROM.put(eeAddress, getDose1Stats() + 1);
-    } else {
-        EEPROM.put(eeAddress + sizeof(uint16_t), getDose2Stats() + 1);
+void Grinder::increaseStatsCounter(uint_least8_t whichDose) {
+    switch (whichDose) {
+        case 0:
+            EEPROM.put(eeAddress, getStats(0) + 1);
+        case 1:
+            EEPROM.put(eeAddress + sizeof(uint16_t), getStats(1) + 1);
+        case 2:
+            EEPROM.put(eeAddress + 2*sizeof(uint16_t), getStats(2) + 1);
     }
 }
 #endif
-
-/*
-#ifdef DOSESTATS
-void Grinder::increaseStatsCounter(uint8_t)) {
-        EEPROM.put(eeAddress + (i* sizeof(uint16_t)), getDoseStats(uint8_t) + 1);
-}
-#endif
-*/
 
 void Grinder::resetStats() {
     for (unsigned int i = 0 ; i < EEPROM.length() ; i++) {

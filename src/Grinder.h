@@ -18,9 +18,8 @@ class Grinder
         bool wasLongPressed();
         bool btnChanged();
 
-        int getDose1Stats();
-        int getDose2Stats();
-        void increaseStatsCounter(bool isDose1);
+        uint16_t getStats(uint_least8_t i);
+        void increaseStatsCounter(uint_least8_t whichDose);
         void resetStats();
         unsigned long grindingStart = 0;
         unsigned long grindingTime = 0;
