@@ -1,8 +1,7 @@
 #define DISPLAY_ADDR 0x3C // I2C Address - use 0x3C or 0x3D depending on your display
-//#define SCREENTYPE GRAPHIC // Acceptable values GRAPHIC, TEXT (not yet implemented)
-#define DISPLAYDRIVER Adafruit_SH1106G // Probably Adafruit_SH1106G or Adafruit_SSD1306
-#define DISPLAYWIDTH 128 // For GRAPHIC, supports 128. [For TEXT, support to be added for 20, 16]
-#define DISPLAYHEIGHT 64 // For GRAPHIC, supports 64, 32 (kind of). [For TEXT, support to be added for 4,2]
+#define DISPLAYDRIVER Adafruit_SH1106G // Currently Adafruit_SH1106G or Adafruit_SSD1306
+#define DISPLAYWIDTH 128 // For GRAPHIC, supports 128
+#define DISPLAYHEIGHT 64 // For GRAPHIC, supports 64
 #define INVERTDISPLAY false // true to invert display - generally looks horrible but can be useful for design
 #define DISPLAYROTATION 0 // Rotate display. Only 0 (normal) or 2 (upside down) are supported
 

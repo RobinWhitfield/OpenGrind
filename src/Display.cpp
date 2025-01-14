@@ -6,6 +6,7 @@
 #include "Display.h"
 #include "Temperature.h"
 
+/*
 static const unsigned char PROGMEM cup[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC1, 0xC1, 0x80, 0x00, 0x01, 0x83, 0x83, 0x00, 0x00, 0x01,
     0x03, 0x03, 0x00, 0x00, 0x01, 0x03, 0x03, 0x00, 0x00, 0x01, 0x81, 0x83, 0x80, 0x00, 0x00, 0xC1,
@@ -21,6 +22,8 @@ static const unsigned char PROGMEM cup[] = {
     0xFF, 0xFF, 0xE0, 0x00, 0x01, 0xFF, 0xFF, 0xC0, 0x00, 0x00, 0xFF, 0xFF, 0xC0, 0x00, 0x00, 0x7F,
     0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+*/
+
 
 Display::Display() {
     display = new DISPLAYDRIVER(DISPLAYWIDTH, DISPLAYHEIGHT, &Wire, -1);
@@ -46,6 +49,49 @@ void Display::resetText() {
     display->display();
 }
 
+void Display::printProgram(uint_least8_t prog){
+    display->clearDisplay();
+
+    switch(prog){
+        case 0: //Dose 1
+            display->setTextColor(WHITE);
+            display->setTextSize(1);
+            display->setCursor(20, 30);
+            display->println(F("Dose 1")); //Temporary text
+            /*
+            display->drawBitmap(
+                (display->width()  - 40) / 2,
+                (display->height() - 40) / 2,
+                cup, 40, 40, 1);
+                */
+        break;
+        case 1: //Dose 2
+            display->setTextColor(WHITE);
+            display->setTextSize(1);
+            display->setCursor(20, 30);
+            display->println(F("Dose 2")); //Temporary text
+            /*
+            display->drawBitmap(
+                (display->width()  - 94) / 2,
+                (display->height() - 40) / 2,
+                cup, 40, 40, 1);
+            display->drawBitmap(
+                (display->width() + 14 ) / 2,
+                (display->height() - 40) / 2,
+                cup, 40, 40, 1);
+                */
+        break;
+        case 2: //Dose 3
+            display->setTextColor(WHITE);
+            display->setTextSize(1);
+            display->setCursor(20, 30);
+            display->println(F("GBW Mode")); //Temporary text
+        break;
+    }
+    display->display();
+}
+
+/*
 void Display::printDose1() {
     display->clearDisplay();
     display->drawBitmap(
@@ -54,6 +100,7 @@ void Display::printDose1() {
         cup, 40, 40, 1);
     display->display();
 }
+
 
 void Display::printDose2() {
     display->clearDisplay();
@@ -76,6 +123,7 @@ void Display::printGBWDose() {
         cup, 40, 40, 1);
     display->display();
 }
+*/
 
 void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
     time /= 10;
@@ -85,8 +133,8 @@ void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
 
     display->setTextSize(1);
     display->setCursor(0, 0);
-    uint16_t val = temp / 100;
-    uint16_t dec = temp % 100;
+    int16_t val = temp / 100;
+    int16_t dec = temp % 100;
     if(dec<0) { dec -= (2*dec); }
     display->print(val);
     display->print(".");
@@ -130,18 +178,21 @@ void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
     display->display();
 }
 
-void Display::printStatistics(uint16_t numberDose1, uint16_t numberDose2) {
+void Display::printStatistics(uint16_t numberDose1, uint16_t numberDose2, uint16_t numberGBWDose) {
     display->clearDisplay();
     display->setTextColor(WHITE);
 
     #ifdef DOSESTATS
-    display->setTextSize(2);
+    display->setTextSize(1);
     display->setCursor(10, 4);
     display->print(F("D1: "));
     display->println(numberDose1);
-    display->setCursor(10, 24);
+    display->setCursor(10, 14);
     display->print(F("D2: "));
     display->println(numberDose2);
+    display->setCursor(10, 24);
+    display->print(F("BW: "));
+    display->println(numberGBWDose);
     #else
     display->setTextSize(1);
     display->setCursor(0, 12);

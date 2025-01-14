@@ -45,7 +45,7 @@ bool Grinder::wasLongPressed() {
 }
 
 uint16_t Grinder::getStats(uint_least8_t i) {
-    static int res = 0;
+    int res = 0;
     EEPROM.get(eeAddress + (i * sizeof(uint16_t)), res);
     return res;
 }
@@ -55,10 +55,13 @@ void Grinder::increaseStatsCounter(uint_least8_t whichDose) {
     switch (whichDose) {
         case 0:
             EEPROM.put(eeAddress, getStats(0) + 1);
+            break;
         case 1:
             EEPROM.put(eeAddress + sizeof(uint16_t), getStats(1) + 1);
+            break;
         case 2:
-            EEPROM.put(eeAddress + 2*sizeof(uint16_t), getStats(2) + 1);
+            EEPROM.put(eeAddress + (2 * sizeof(uint16_t)), getStats(2) + 1);
+            break;
     }
 }
 #endif

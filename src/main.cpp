@@ -77,7 +77,6 @@ void loop() {
               break;
           }
         }
-        //grinder->grindingTime = dosage->dose1Selected == 0 ? dosage->dose1Time : dosage->dose2Time;
         break;
       }
 
@@ -86,15 +85,18 @@ void loop() {
         switch (dosage->doseSelected) {
             case 0:
               dosage->dose1Time -= DOSE_PRECISION;
-              dosage->dose1Time = (dosage->dose1Time > MAX_DOSE_TIME) ? dosage->dose1Time : 0;
+              dosage->dose1Time = (dosage->dose1Time < 0) ? 0 : dosage->dose1Time;
+              dosage->currentDose = dosage->dose1Time;
               break;
             case 1:
               dosage->dose2Time -= DOSE_PRECISION;
-              dosage->dose2Time = (dosage->dose2Time > MAX_DOSE_TIME) ? dosage->dose2Time : 0;
+              dosage->dose2Time = (dosage->dose2Time < 0) ? 0 : dosage->dose2Time;
+              dosage->currentDose = dosage->dose2Time;
               break;
             case 2:
               dosage->gbwDose -= GBW_DOSE_PRECISION;
-              dosage->gbwDose = (dosage->gbwDose > MAX_GBW_DOSE) ? dosage->gbwDose : 0; // Rolled over? Make zero.
+              dosage->gbwDose = (dosage->gbwDose < 0) ? 0 : dosage->gbwDose;
+              dosage->currentDose = dosage->gbwDose;
               break;
         }
       // decrease dose
@@ -123,7 +125,7 @@ void loop() {
         dosage->dose2Time = dosage->dose2Time < MAX_DOSE_TIME ? dosage->dose2Time : MAX_DOSE_TIME;
         */
       }
-      
+
       display->printTime(dosage->currentDose, temp, mass);
 
       break;
@@ -144,6 +146,9 @@ void loop() {
         }
       }
 
+      display->printProgram(dosage->doseSelected);
+
+/*
       // display dose icons
       switch (dosage->doseSelected) {
         case 0:
@@ -156,6 +161,7 @@ void loop() {
           display->printGBWDose();
           break;
       }
+      */
       
 
 
@@ -189,7 +195,7 @@ void loop() {
       break;
  
     case STATS:
-      display->printStatistics(grinder->getStats(0), grinder->getStats(1));
+      display->printStatistics(grinder->getStats(0), grinder->getStats(1), grinder->getStats(2));
       if(!(lastState == STATS)){
         if (encoder->isPressed()) {
           break;
