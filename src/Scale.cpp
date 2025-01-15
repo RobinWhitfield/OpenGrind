@@ -6,17 +6,23 @@
 
 HX711 HX711scale;
 
+// Tare the scale
+void tare(){
+  // TODO - Add logic to check for instability
+  HX711scale.tare(40);      // Tare the scale, using an average of 40 samples (0.5s)
+}
+
 // Initialise the scale
 Scale::Scale() {
     HX711scale.begin(SCALE_DAT, SCALE_CLK);
-    while (! HX711scale.is_ready()){} // Do nothing until scale is ready - TODO, logic in here for load cell not connected, no GBW
-    HX711scale.set_scale(276.5);       // 750g load cell, output in decigrams (to be divided by 10 for display) - TODO, add calibration routine.
-    HX711scale.set_average_mode();
-    //  reset the scale to zero = 0
-    HX711scale.tare();
+    while (! HX711scale.is_ready()){}       // Do nothing until scale is ready - TODO, logic in here for load cell not connected, no GBW
+    HX711scale.set_scale(276.5);            // 750g load cell, output in decigrams (to be divided by 10 for display) - TODO, add calibration routine.
+    HX711scale.set_average_mode();          // Set the scale to average mode
+    delay(1000);                            // Delay to allow HX711 some time to stabilise
+    tare();                                 // Tare the scale
 }
 
-//Exponential moving average filter, from https://tttapa.github.io/Pages/Mathematics/Systems-and-Control-Theory/Digital-filters/Exponential%20Moving%20Average/C++Implementation.html
+//Exponential moving average filter, from https://github.com/tttapa/Arduino-Filters - GPL 3.0
 template <uint_least8_t K, class uint_t = uint_least32_t>
 class EMA {
   public:
@@ -35,12 +41,12 @@ class EMA {
     uint_t state = 0;
 };
 
-// This takes approximately 70ms when HX711 is at 80sps. Do not try and operate this with your HX711 at 10sps!
-uint16_t Scale::getMeasurement() {
+// This takes approximately 70ms (with 6 samples) when HX711 is at 80sps. Do not try and operate this with your HX711 at 10sps!
+uint16_t Scale::getMeasurement(uint_least8_t samples) {
     static EMA<2> filter;
-    float rawValue = HX711scale.get_units(6); // request reading (average of 6)
-    int16_t intValue = rawValue; // convert to int, good enough.
-    intValue = (intValue < 0) ? 0 : intValue; // if less than zero, make zero - this assumes good zero on boot - TODO, add some logic for this
-    uint16_t filteredValue = filter(intValue); // EMA filter
-    return filteredValue;
+    float rawValue = HX711scale.get_units(samples) + 0.5;   // request reading (average of 6). Add 0.5 before casting to round correctly
+    int16_t intValue = rawValue;                      // convert to int, good enough.
+    intValue = (intValue < 0) ? 0 : intValue;         // if less than zero, make zero - this assumes good zero on boot - TODO, add some logic for this
+    uint16_t filteredValue = filter(intValue);        // EMA filter
+    return filteredValue;                             // Return the filtered value
 }

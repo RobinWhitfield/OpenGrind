@@ -8,7 +8,7 @@ class Dosage
 
   public:
     Dosage();
-    uint_least8_t doseSelected;
+    uint_least8_t programSelected; // Current program selected, 
     int_least16_t dose1Time = DOSE1_DEFAULT_TIME;
     int_least16_t dose2Time = DOSE2_DEFAULT_TIME;
     int_least16_t gbwDose = GBW_DEFAULT_DOSE;

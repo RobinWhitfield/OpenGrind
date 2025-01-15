@@ -17,10 +17,13 @@ Grinder *grinder;
 TempSensor *temperature;
 Scale *scale;
 
-// State Machine
-enum States {CHANGE_DOSE, SET_DOSE, GRINDING, STATS};
+// State machine for modes of operation
+enum States : uint_least8_t {SELECT_PROGRAM, SET_DOSE, GRINDING, STATS};
 uint8_t state = SET_DOSE;
 uint8_t lastState = SET_DOSE;
+
+
+enum Programs : uint_least8_t {DOSE1, DOSE2, GBWMODE};
 
 void setup() {
   encoder = new RotaryEncoder();
@@ -33,13 +36,13 @@ void setup() {
 
 void(* resetFunc) (void) = 0;
 
-void loop() {
+void running() {
   grinder->btnUpdate(); // Let the bounce library know the button states
   encoder->btnUpdate();
   int16_t temp = temperature->getTemp(); // get sensor temp
-  uint16_t mass = scale->getMeasurement(); // get scale measurement
+  uint16_t mass = scale->getMeasurement(6); // get scale measurement, 6 samples
 
-  if (!(state == 2)) { grinder->off(); } // if not grinding, grinder off
+  if (!(state == GRINDING)) { grinder->off(); } // if not grinding, grinder off
 
   switch(state)
   {
@@ -52,10 +55,10 @@ void loop() {
         break;
       }
 
-      // change dose
+      // select program ()
       if (encoder->isPressed()) {
         lastState = state;
-        state = CHANGE_DOSE;
+        state = SELECT_PROGRAM;
         break;
       }
 
@@ -65,7 +68,7 @@ void loop() {
         state = GRINDING;
         if(!(lastState == GRINDING)){
           grinder->grindingStart = millis();
-          switch (dosage->doseSelected) {
+          switch (dosage->programSelected) {
             case 0:
               grinder->grindingTime = dosage->dose1Time;
               break;
@@ -80,77 +83,82 @@ void loop() {
         break;
       }
 
-      // increase dose
-      if (encoder->wasTurnedLeft()) {
-        switch (dosage->doseSelected) {
-            case 0:
-              dosage->dose1Time -= DOSE_PRECISION;
-              dosage->dose1Time = (dosage->dose1Time < 0) ? 0 : dosage->dose1Time;
-              dosage->currentDose = dosage->dose1Time;
-              break;
-            case 1:
-              dosage->dose2Time -= DOSE_PRECISION;
-              dosage->dose2Time = (dosage->dose2Time < 0) ? 0 : dosage->dose2Time;
-              dosage->currentDose = dosage->dose2Time;
-              break;
-            case 2:
-              dosage->gbwDose -= GBW_DOSE_PRECISION;
-              dosage->gbwDose = (dosage->gbwDose < 0) ? 0 : dosage->gbwDose;
-              dosage->currentDose = dosage->gbwDose;
-              break;
+    switch (dosage->programSelected) {
+      case DOSE1:
+        if (encoder->wasTurnedLeft()) {
+          dosage->dose1Time -= DOSE_PRECISION;
+          dosage->dose1Time = (dosage->dose1Time < 0) ? 0 : dosage->dose1Time;
+          dosage->currentDose = dosage->dose1Time;
+          break;
+        } else if (encoder->wasTurnedRight()) {
+          dosage->dose1Time += DOSE_PRECISION;
+          dosage->dose1Time = (dosage->dose1Time > MAX_DOSE_TIME) ? MAX_DOSE_TIME : dosage->dose1Time;
+          dosage->currentDose = dosage->dose1Time;
+          break;
+        } else {
+          dosage->currentDose = dosage->dose1Time;
+          break;
         }
-      // decrease dose
-      } else if (encoder->wasTurnedRight()) {
-        switch (dosage->doseSelected) {
-          case 0:
-            dosage->dose1Time += DOSE_PRECISION;
-            dosage->dose1Time = (dosage->dose1Time > MAX_DOSE_TIME) ? MAX_DOSE_TIME : dosage->dose1Time;
-            dosage->currentDose = dosage->dose1Time;
-            break;
-          case 1:
-            dosage->dose2Time += DOSE_PRECISION;
-            dosage->dose2Time = (dosage->dose2Time > MAX_DOSE_TIME) ? MAX_DOSE_TIME : dosage->dose2Time;
-            dosage->currentDose = dosage->dose2Time;
-            break;
-          case 2:
-            dosage->gbwDose += GBW_DOSE_PRECISION;
-            dosage->gbwDose = (dosage->gbwDose > MAX_GBW_DOSE) ? MAX_GBW_DOSE : dosage->gbwDose;
-            dosage->currentDose = dosage->gbwDose;
-            break;
+      case DOSE2:
+        if (encoder->wasTurnedLeft()) {
+          dosage->dose2Time -= DOSE_PRECISION;
+          dosage->dose2Time = (dosage->dose2Time < 0) ? 0 : dosage->dose2Time;
+          dosage->currentDose = dosage->dose2Time;
+          break;
+        } else if (encoder->wasTurnedRight()) {
+          dosage->dose2Time += DOSE_PRECISION;
+          dosage->dose2Time = (dosage->dose2Time > MAX_DOSE_TIME) ? MAX_DOSE_TIME : dosage->dose2Time;
+          dosage->currentDose = dosage->dose2Time;
+          break;
+        } else {
+        dosage->currentDose = dosage->dose2Time;
+        break;
         }
-        /*
-        dosage->dose1Time += dosage->dose1Selected ? DOSE_PRECISION : 0;
-        dosage->dose2Time += dosage->dose1Selected == false ? DOSE_PRECISION : 0;
-        dosage->dose1Time = dosage->dose1Time < MAX_DOSE_TIME ? dosage->dose1Time : MAX_DOSE_TIME;
-        dosage->dose2Time = dosage->dose2Time < MAX_DOSE_TIME ? dosage->dose2Time : MAX_DOSE_TIME;
-        */
-      }
+      case GBWMODE:
+        if (encoder->wasTurnedLeft()) {
+          dosage->gbwDose -= GBW_DOSE_PRECISION;
+          dosage->gbwDose = (dosage->gbwDose < 0) ? 0 : dosage->gbwDose;
+          dosage->currentDose = dosage->gbwDose;
+          break;  
+        } else if (encoder->wasTurnedRight()) {
+          dosage->gbwDose += GBW_DOSE_PRECISION;
+          dosage->gbwDose = (dosage->gbwDose > MAX_GBW_DOSE) ? MAX_GBW_DOSE : dosage->gbwDose;
+          dosage->currentDose = dosage->gbwDose;
+          break;
+        }
+        else {
+          dosage->currentDose = dosage->gbwDose;
+          break;
+        }
+
+    }
 
       display->printTime(dosage->currentDose, temp, mass);
 
       break;
 
-    case CHANGE_DOSE:
+    case SELECT_PROGRAM:
       // select dose
       if (encoder->wasTurnedLeft()) {
-        if (dosage->doseSelected > 0){
-          dosage->doseSelected -= 1;
+        if (dosage->programSelected > 0){
+          dosage->programSelected -= 1;
         } else {
-          dosage->doseSelected = 0;
+          dosage->programSelected = 0;
         }
+        dosage->writeToEEPROM(); //Write values to EEPROM on change, uses EEPROM put so won't wear out EEPROM.
       } else if (encoder->wasTurnedRight()) {
-        if (dosage->doseSelected < 2){
-          dosage->doseSelected += 1;
+        if (dosage->programSelected < 2){
+          dosage->programSelected += 1;
         } else {
-          dosage->doseSelected = 2;
+          dosage->programSelected = 2;
         }
+        dosage->writeToEEPROM(); //Write values to EEPROM on change, uses EEPROM put so won't wear out EEPROM.
       }
-
-      display->printProgram(dosage->doseSelected);
+      display->printProgram(dosage->programSelected);
 
 /*
       // display dose icons
-      switch (dosage->doseSelected) {
+      switch (dosage->programSelected) {
         case 0:
           display->printDose1();
           break;
@@ -186,7 +194,7 @@ void loop() {
       grinder->off();
 
       #ifdef DOSESTATS
-      grinder->increaseStatsCounter(dosage->doseSelected); // Add grind to stats
+      grinder->increaseStatsCounter(dosage->programSelected); // Add grind to stats
       #endif
 
       display->printTime(0, temp, mass);
@@ -215,7 +223,7 @@ void loop() {
       // break out into grinding if button pressed
       if (grinder->wasPressed()) {
         state = GRINDING;
-        switch (dosage->doseSelected) {
+        switch (dosage->programSelected) {
           case 1:
             grinder->grindingStart = millis();
             grinder->grindingTime = dosage->dose1Time;
@@ -239,4 +247,10 @@ void loop() {
       }
       break;   
   }       
+}
+
+void loop(){
+  while(1){
+    running();
+  }
 }

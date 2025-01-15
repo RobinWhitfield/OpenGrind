@@ -1,4 +1,4 @@
-//#include <Adafruit_GFX.h>
+#include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_SH110X.h>
 
@@ -28,7 +28,7 @@ static const unsigned char PROGMEM cup[] = {
 Display::Display() {
     display = new DISPLAYDRIVER(DISPLAYWIDTH, DISPLAYHEIGHT, &Wire, -1);
 
-    //    if (!display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDR)) {
+    // if(!display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDR)) {
     if (!display->begin(DISPLAY_ADDR)) {
         for(;;);
     }
@@ -38,11 +38,11 @@ Display::Display() {
     display->display();
     display->invertDisplay(INVERTDISPLAY);
     display->setRotation(DISPLAYROTATION);
+    display->setTextColor(1);
 }
 
 void Display::resetText() {
     display->clearDisplay();
-    display->setTextColor(WHITE);
     display->setCursor(0,0);
     display->setTextSize(1);
     display->print(F("Factory reset..."));
@@ -54,8 +54,7 @@ void Display::printProgram(uint_least8_t prog){
 
     switch(prog){
         case 0: //Dose 1
-            display->setTextColor(WHITE);
-            display->setTextSize(1);
+            display->setTextSize(2);
             display->setCursor(20, 30);
             display->println(F("Dose 1")); //Temporary text
             /*
@@ -66,8 +65,7 @@ void Display::printProgram(uint_least8_t prog){
                 */
         break;
         case 1: //Dose 2
-            display->setTextColor(WHITE);
-            display->setTextSize(1);
+            display->setTextSize(2);
             display->setCursor(20, 30);
             display->println(F("Dose 2")); //Temporary text
             /*
@@ -82,8 +80,7 @@ void Display::printProgram(uint_least8_t prog){
                 */
         break;
         case 2: //Dose 3
-            display->setTextColor(WHITE);
-            display->setTextSize(1);
+            display->setTextSize(2);
             display->setCursor(20, 30);
             display->println(F("GBW Mode")); //Temporary text
         break;
@@ -91,46 +88,20 @@ void Display::printProgram(uint_least8_t prog){
     display->display();
 }
 
-/*
-void Display::printDose1() {
-    display->clearDisplay();
-    display->drawBitmap(
-        (display->width()  - 40) / 2,
-        (display->height() - 40) / 2,
-        cup, 40, 40, 1);
-    display->display();
-}
+// Report continuous free RAM (AVR only), as per https://docs.arduino.cc/learn/programming/memory-guide/#measuring-memory-usage-in-arduino-boards
+uint_least16_t freeRam() {
 
+  extern uint_least16_t __heap_start,*__brkval;
 
-void Display::printDose2() {
-    display->clearDisplay();
-    display->drawBitmap(
-        (display->width()  - 94) / 2,
-        (display->height() - 40) / 2,
-        cup, 40, 40, 1);
-    display->drawBitmap(
-        (display->width() + 14 ) / 2,
-        (display->height() - 40) / 2,
-        cup, 40, 40, 1);
-    display->display();
-}
+  uint_least16_t v;
 
-void Display::printGBWDose() {
-    display->clearDisplay();
-    display->drawBitmap(
-        (display->width()  - 40) / 2,
-        (display->height() - 40) / 2,
-        cup, 40, 40, 1);
-    display->display();
+  return (uint_least16_t)&v - (__brkval == 0  ? (uint_least16_t)&__heap_start : (uint_least16_t) __brkval);  
+
 }
-*/
 
 void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
     time /= 10;
     display->clearDisplay();
-
-    display->setTextColor(WHITE);
-
     display->setTextSize(1);
     display->setCursor(0, 0);
     int16_t val = temp / 100;
@@ -138,7 +109,7 @@ void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
     if(dec<0) { dec -= (2*dec); }
     display->print(val);
     display->print(".");
-    if(dec<10) { display->print(F("0")); }
+    if(dec<10) { display->print(F("0")); } // If single digit, add trailing 0
     display->print(dec);
     display->print(F("c     "));
     val = mass / 10;
@@ -149,38 +120,28 @@ void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
     display->print(dec);
     display->print(F("g"));
 
-    /*
-    if(DISPLAYHEIGHT == 32) {
-        display->setTextSize(2);
-        display->setCursor(26, 4);
-    }
-    else { */
-        display->setTextSize(4);
-        display->setCursor(14, 18);
+    display->setTextSize(4);
+    display->setCursor(14, 18);
 
     val = time / 100;
     dec = time % 100;
     display->print(val);
     display->print(".");
-    if(dec<10) { display->print(F("0")); }
+    if(dec<10) { display->print(F("0")); } // If whole g, add trailing 0
     display->print(dec);
-    /*
-    if(DISPLAYHEIGHT == 32) {
-        display->setTextSize(1);
-        display->setCursor(100, 18);
-    }
-    else { */
-        display->setTextSize(1);
-        display->setCursor(112, 39);
-        
+
+    display->setTextSize(1);
+    display->setCursor(112, 39);
     display->print("s");
+
+    //display->setCursor(0, 54); //bottom of screen
+    //display->print(F("Free SRAM:" ));  display->print(freeRam());  display->print(F(" bytes")); //Write free SRAM to display
 
     display->display();
 }
 
 void Display::printStatistics(uint16_t numberDose1, uint16_t numberDose2, uint16_t numberGBWDose) {
     display->clearDisplay();
-    display->setTextColor(WHITE);
 
     #ifdef DOSESTATS
     display->setTextSize(1);
