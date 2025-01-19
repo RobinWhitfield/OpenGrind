@@ -1,5 +1,3 @@
-#include <EEPROM.h>
-
 #include "Dosage.h"
 
 Dosage::Dosage() {

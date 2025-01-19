@@ -1,10 +1,8 @@
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <Adafruit_SH110X.h>
-
-#include "Definitions.h"
 #include "Display.h"
-#include "Temperature.h"
+
+SSOLED ssoled;
+
+char szTemp[200];
 
 /*
 static const unsigned char PROGMEM cup[] = {
@@ -26,68 +24,63 @@ static const unsigned char PROGMEM cup[] = {
 
 
 Display::Display() {
-    display = new DISPLAYDRIVER(DISPLAYWIDTH, DISPLAYHEIGHT, &Wire, -1);
 
-    // if(!display->begin(SSD1306_SWITCHCAPVCC, DISPLAY_ADDR)) {
-    if (!display->begin(DISPLAY_ADDR)) {
-        for(;;);
+    //SSOLED initialisation
+    int rc;
+    rc = oledInit(&ssoled, OLED_128x64, OLED_ADDR, FLIP180, INVERT, USE_HW_I2C, SDA_PIN, SCL_PIN, RESET_PIN, 400000L);       // Standard HW I2C bus at 400Khz
+
+    if (rc != OLED_NOT_FOUND)
+    {
+        char *msgs[] =
+        {
+          (char *)"SSD1306 @ 0x3C",
+          (char *)"SSD1306 @ 0x3D",
+          (char *)"SH1106 @ 0x3C",
+          (char *)"SH1106 @ 0x3D",
+          (char *)"SH1107 @ 0x3C",
+          (char *)"SH1107 @ 0x3D"
+        };
+
+        oledFill(&ssoled, 0, 1);
+        oledWriteString(&ssoled, 0, 30, 0, (char *)"Tambaqui", FONT_NORMAL, 0, 1);
+        oledWriteString(&ssoled, 0, 12, 2, (char *)"Open Grinder", FONT_NORMAL, 0, 1);
+        oledWriteString(&ssoled, 0, 0, 7, (char *)"OLED:  ", FONT_SMALL, 0, 1);
+        oledWriteString(&ssoled, 0, -1, -1, msgs[rc], FONT_SMALL, 0, 1);
+        delay(1000);
+        clear();
     }
-
-    display->cp437(true);
-    display->clearDisplay();
-    display->display();
-    display->invertDisplay(INVERTDISPLAY);
-    display->setRotation(DISPLAYROTATION);
-    display->setTextColor(1);
+    else {
+        Serial.println(F("No display found, check connections and reboot"));
+        while(1){
+            ;;          // Halt
+        }
+    }
 }
 
 void Display::resetText() {
-    display->clearDisplay();
-    display->setCursor(0,0);
-    display->setTextSize(1);
-    display->print(F("Factory reset..."));
-    display->display();
+
+   oledFill(&ssoled, 0, 1);
+   oledWriteString(&ssoled, 0, 0, 0, (char *)"Factory reset...", FONT_NORMAL, 0, 1);
+}
+
+void Display::clear(){
+    oledFill(&ssoled, 0, 1);
 }
 
 void Display::printProgram(uint_least8_t prog){
-    display->clearDisplay();
 
     switch(prog){
         case 0: //Dose 1
-            display->setTextSize(2);
-            display->setCursor(20, 30);
-            display->println(F("Dose 1")); //Temporary text
-            /*
-            display->drawBitmap(
-                (display->width()  - 40) / 2,
-                (display->height() - 40) / 2,
-                cup, 40, 40, 1);
-                */
+            oledWriteString(&ssoled, 0, 33, 1, (char *)" Dose 1 ", FONT_SMALL, 1, 1);
         break;
         case 1: //Dose 2
-            display->setTextSize(2);
-            display->setCursor(20, 30);
-            display->println(F("Dose 2")); //Temporary text
-            /*
-            display->drawBitmap(
-                (display->width()  - 94) / 2,
-                (display->height() - 40) / 2,
-                cup, 40, 40, 1);
-            display->drawBitmap(
-                (display->width() + 14 ) / 2,
-                (display->height() - 40) / 2,
-                cup, 40, 40, 1);
-                */
+            oledWriteString(&ssoled, 0, 33, 1, (char *)" Dose 2 ", FONT_SMALL, 1, 1);
         break;
         case 2: //Dose 3
-            display->setTextSize(2);
-            display->setCursor(20, 30);
-            display->println(F("GBW Mode")); //Temporary text
+            oledWriteString(&ssoled, 0, 33, 1, (char *)"GBW Mode", FONT_SMALL, 1, 1);
         break;
     }
-    display->display();
 }
-
 // Report continuous free RAM (AVR only), as per https://docs.arduino.cc/learn/programming/memory-guide/#measuring-memory-usage-in-arduino-boards
 uint_least16_t freeRam() {
 
@@ -99,70 +92,69 @@ uint_least16_t freeRam() {
 
 }
 
-void Display::printTime(uint16_t time, int16_t temp, uint16_t mass) {
-    time /= 10;
-    display->clearDisplay();
-    display->setTextSize(1);
-    display->setCursor(0, 0);
-    int16_t val = temp / 100;
-    int16_t dec = temp % 100;
-    if(dec<0) { dec -= (2*dec); }
-    display->print(val);
-    display->print(".");
-    if(dec<10) { display->print(F("0")); } // If single digit, add trailing 0
-    display->print(dec);
-    display->print(F("c     "));
-    val = mass / 10;
-    dec = mass % 10;
-    if(dec<0) { dec -= (2*dec); }
-    display->print(val);
-    display->print(".");
-    display->print(dec);
-    display->print(F("g"));
+void Display::printTime(uint16_t time, int16_t temp, int16_t mass, uint_least8_t program) {
+    static uint16_t lasttime;
+    static int16_t lasttemp;
+    static int16_t lastmass;
+    if (time == lasttime && temp == lasttemp && mass == lastmass){}
+    else {
+        time /= 10;
 
-    display->setTextSize(4);
-    display->setCursor(14, 18);
+        int16_t val = temp / 100;
+        int16_t dec = temp % 100;
+        if(dec<0) { dec -= (2*dec); } // if negative temp, invert the decimal
+        if(dec < 10) { sprintf(szTemp, "%d.0%dc  ", val, dec); }
+        else { sprintf(szTemp, "%d.%dc  ", val, dec); }
+        oledWriteString(&ssoled, 0, 0, 7, szTemp, FONT_SMALL, 0, 1);
 
-    val = time / 100;
-    dec = time % 100;
-    display->print(val);
-    display->print(".");
-    if(dec<10) { display->print(F("0")); } // If whole g, add trailing 0
-    display->print(dec);
+        val = mass / 10;
+        dec = mass % 10;
+        if(dec<0) { dec -= (2*dec); } // if negative mass, invert the decimal
+        sprintf(szTemp, "%d.%dg  ", val, dec);
+        oledWriteString(&ssoled, 0, 60, 7, szTemp, FONT_SMALL, 0, 1);
 
-    display->setTextSize(1);
-    display->setCursor(112, 39);
-    display->print("s");
+        val = time / 100;
+        dec = time % 100;
+        if(dec < 10) { sprintf(szTemp, "%d.0%ds  ", val, dec); }
+        else { sprintf(szTemp, "%d.%ds  ", val, dec); }  
+        oledWriteString(&ssoled, 0, 20, 3, szTemp, FONT_12x16, 0, 2);
 
-    //display->setCursor(0, 54); //bottom of screen
-    //display->print(F("Free SRAM:" ));  display->print(freeRam());  display->print(F(" bytes")); //Write free SRAM to display
+        switch(program){
+            case 0:
+                oledWriteString(&ssoled, 0, 33, 1, (char *)" Dose 1 ", FONT_SMALL, 0, 1);
+            break;
+            case 1:
+                oledWriteString(&ssoled, 0, 33, 1, (char *)" Dose 2 ", FONT_SMALL, 0, 1);    
+            break;
+            case 2:
+                oledWriteString(&ssoled, 0, 33, 1, (char *)"GBW Mode", FONT_SMALL, 0, 1);
+            break;
+        }
+        //sprintf(szTemp, "Free SRAM: %d bytes", freeRam());
+        //oledWriteString(&ssoled, 0, 0, 6, szTemp, FONT_SMALL, 0, 1);
 
-    display->display();
+
+       
+        mass = lastmass;
+        time = lasttime;
+        temp = lasttemp;
+    }
 }
 
 void Display::printStatistics(uint16_t numberDose1, uint16_t numberDose2, uint16_t numberGBWDose) {
-    display->clearDisplay();
 
     #ifdef DOSESTATS
-    display->setTextSize(1);
-    display->setCursor(10, 4);
-    display->print(F("D1: "));
-    display->println(numberDose1);
-    display->setCursor(10, 14);
-    display->print(F("D2: "));
-    display->println(numberDose2);
-    display->setCursor(10, 24);
-    display->print(F("BW: "));
-    display->println(numberGBWDose);
+    
+    sprintf(szTemp, "D1: %d", numberDose1);
+    oledWriteString(&ssoled, 0, 0, 2, szTemp, FONT_SMALL, 0, 1);
+    sprintf(szTemp, "D2: %d", numberDose2);
+    oledWriteString(&ssoled, 0, 0, 3, szTemp, FONT_SMALL, 0, 1);
+    sprintf(szTemp, "BW: %d", numberGBWDose);
+    oledWriteString(&ssoled, 0, 0, 4, szTemp, FONT_SMALL, 0, 1);
     #else
-    display->setTextSize(1);
-    display->setCursor(0, 12);
-    display->println(F("Commercial mode"));
-    display->println(F("Stats disabled"));
+
+    oledWriteString(&ssoled, 0, 0, 1, (char*)"Commercial Mode", FONT_SMALL, 0, 1);
+    oledWriteString(&ssoled, 0, 0, 2, (char*)"Stats disabled", FONT_SMALL, 0, 1);
     #endif
-    display->setTextSize(1);
-    display->println();
-    display->print(F("Hold to factory reset"));
-    display->display();
+    oledWriteString(&ssoled, 0, 0, 7, (char*)"Hold to reset", FONT_SMALL, 0, 1);
 }
-//#endif

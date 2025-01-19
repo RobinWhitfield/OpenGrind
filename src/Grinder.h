@@ -1,5 +1,11 @@
 #pragma once
 
+#include <Arduino.h>
+#include <EEPROM.h>
+#include <Bounce2.h>
+
+#include "Definitions.h"
+
 //class Button;
 class Grinder
 {  

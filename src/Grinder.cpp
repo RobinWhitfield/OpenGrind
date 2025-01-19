@@ -1,8 +1,3 @@
-#include <Arduino.h>
-#include <EEPROM.h>
-#include <Bounce2.h>
-
-#include "Definitions.h"
 #include "Grinder.h"
 
 Bounce2::Button grindPin = Bounce2::Button();

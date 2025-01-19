@@ -5,6 +5,19 @@
 #define INVERTDISPLAY false // true to invert display - generally looks horrible but can be useful for design
 #define DISPLAYROTATION 0 // Rotate display. Only 0 (normal) or 2 (upside down) are supported
 
+//---For SSOLED Lib:
+#define SDA_PIN -1
+#define SCL_PIN -1
+// no reset pin needed
+#define RESET_PIN -1
+// let ss_oled find the address of our display
+#define OLED_ADDR -1
+#define FLIP180 0
+#define INVERT 0
+// Use the default Wire library
+#define USE_HW_I2C 1
+//----
+
 #define ENC_CLK 2 // Encoder CLK Input Pin
 #define ENC_DT 3 // Encoder DT Input Pin
 #define ENC_SW 4 // Encoder Switch Input Pin
@@ -21,10 +34,10 @@
 
 #define ONE_WIRE_BUS 7 // One wire bus pin for DS18B20 sensor
 
-#define MAX_DOSE_TIME 9900 // The maximum grind time, in milliseconds. Some displays will have issues over 9990
+#define MAX_DOSE_TIME 17000 // The maximum grind time, in milliseconds.
 #define MAX_GBW_DOSE 500 // The maximum GBW dose in decigrams
 #define DOSE_PRECISION 50 // The precision of dose time you wish to set (in ms). Min 10, 50 is usually fine. If your max dose time is not divisible by this, you might end up with funny numbers.
-#define GBW_DOSE_PRECISION 50 // GBW dose precision (in decigrams, 1 = 0.1g)
+#define GBW_DOSE_PRECISION 10 // GBW dose precision (in decigrams, 1 = 0.1g)
 
 #define DOSESTATS // Dose counter enabled. Comment this out in a commercial setting or you might wear out the MCU EEPROM
 

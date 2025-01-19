@@ -26,12 +26,14 @@ uint8_t lastState = SET_DOSE;
 enum Programs : uint_least8_t {DOSE1, DOSE2, GBWMODE};
 
 void setup() {
-  encoder = new RotaryEncoder();
+  Serial.begin(115200);
   display = new Display();
+  encoder = new RotaryEncoder();
   dosage = new Dosage();
   grinder = new Grinder();
   temperature = new TempSensor();
   scale = new Scale();
+  display->clear();
 }
 
 void(* resetFunc) (void) = 0;
@@ -40,7 +42,7 @@ void running() {
   grinder->btnUpdate(); // Let the bounce library know the button states
   encoder->btnUpdate();
   int16_t temp = temperature->getTemp(); // get sensor temp
-  uint16_t mass = scale->getMeasurement(6); // get scale measurement, 6 samples
+  int16_t mass = scale->getMeasurement(3); // get scale measurement, average of 4 samples
 
   if (!(state == GRINDING)) { grinder->off(); } // if not grinding, grinder off
 
@@ -51,6 +53,7 @@ void running() {
       // show stats
       if (encoder->wasLongPressed()) {
         lastState = state;
+        display->clear();
         state = STATS;
         break;
       }
@@ -66,16 +69,17 @@ void running() {
       if (grinder->wasPressed()) {
         lastState = state;
         state = GRINDING;
+        scale->tare(3);
         if(!(lastState == GRINDING)){
           grinder->grindingStart = millis();
           switch (dosage->programSelected) {
-            case 0:
+            case DOSE1:
               grinder->grindingTime = dosage->dose1Time;
               break;
-            case 1:
+            case DOSE2:
               grinder->grindingTime = dosage->dose2Time;
               break;
-            case 2:
+            case GBWMODE:
               grinder->grindingTime = dosage->gbwDose;
               break;
           }
@@ -133,7 +137,8 @@ void running() {
 
     }
 
-      display->printTime(dosage->currentDose, temp, mass);
+      display->printTime(dosage->currentDose, temp, mass, dosage->programSelected);
+      //display->printmass(mass);
 
       break;
 
@@ -145,6 +150,7 @@ void running() {
         } else {
           dosage->programSelected = 0;
         }
+        //display->clear();
         dosage->writeToEEPROM(); //Write values to EEPROM on change, uses EEPROM put so won't wear out EEPROM.
       } else if (encoder->wasTurnedRight()) {
         if (dosage->programSelected < 2){
@@ -152,24 +158,11 @@ void running() {
         } else {
           dosage->programSelected = 2;
         }
+        //display->clear();
+
         dosage->writeToEEPROM(); //Write values to EEPROM on change, uses EEPROM put so won't wear out EEPROM.
       }
       display->printProgram(dosage->programSelected);
-
-/*
-      // display dose icons
-      switch (dosage->programSelected) {
-        case 0:
-          display->printDose1();
-          break;
-        case 1:
-          display->printDose2();
-          break;
-        case 2:
-          display->printGBWDose();
-          break;
-      }
-      */
       
 
 
@@ -182,7 +175,7 @@ void running() {
       if (millis()-grinder->grindingStart < grinder->grindingTime) {
 
         unsigned long testtime = millis()-grinder->grindingStart;
-        display->printTime(grinder->grindingTime - testtime, temp, mass);
+        display->printTime(grinder->grindingTime - testtime, temp, mass, dosage->programSelected);
         grinder->on();
 
         if (encoder->wasPressed()) {
@@ -197,8 +190,8 @@ void running() {
       grinder->increaseStatsCounter(dosage->programSelected); // Add grind to stats
       #endif
 
-      display->printTime(0, temp, mass);
-      delay(250); // show 0.0 on display for a longer time
+      //display->printTime(0, temp, mass, dosage->programSelected);
+      //delay(250); // show 0.0 on display for a longer time
       state = SET_DOSE;
       break;
  
@@ -223,6 +216,7 @@ void running() {
       // break out into grinding if button pressed
       if (grinder->wasPressed()) {
         state = GRINDING;
+        scale->tare(3);
         switch (dosage->programSelected) {
           case 1:
             grinder->grindingStart = millis();
@@ -233,13 +227,14 @@ void running() {
             grinder->grindingTime = dosage->dose2Time;
             break;
           case 3:
-            // Who knows what to do...
+            // Who knows what to do when GBW.
             break;
         }
       }
 
       // reset if encoder button held
       if ((encoder->wasLongPressed())) {
+        display->clear();
         display->resetText();
         delay(1500);
         grinder->resetStats();

@@ -1,7 +1,3 @@
-#include <Encoder.h>
-#include <Bounce2.h>
-
-#include "Definitions.h"
 #include "RotaryEncoder.h"
 
 Bounce2::Button encoderPin = Bounce2::Button();

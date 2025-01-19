@@ -1,4 +1,7 @@
 #pragma once
+
+#include <EEPROM.h>
+
 #include "Definitions.h"
 
 class Dosage
